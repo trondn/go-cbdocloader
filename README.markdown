@@ -32,12 +32,12 @@ will be removed)
 
 OPTIONS:
 
-  `-n HOST[:PORT]`     Default port is 8091
-  `-u USERNAME`        This parameter is ignored.
-  `-p PASSWORD`        Bucket password
-  `-b BUCKETNAME`      Specific bucket name. Default is default bucket. Bucket have to exist
-  `-s QUOTA`,          This parameter is ignored
-  `-h`                 Show this help message and exit
+    -n HOST[:PORT]     Default port is 8091
+    -u USERNAME        This parameter is ignored.
+    -p PASSWORD        Bucket password
+    -b BUCKETNAME      Specific bucket name. Default is default bucket. Bucket have to exist
+    -s QUOTA           This parameter is ignored
+    -h                 Show this help message and exit
 
 Requirements
 ------------
