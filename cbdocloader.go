@@ -5,7 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -13,35 +13,26 @@ import (
 	"github.com/couchbaselabs/go-couchbase"
 )
 
-func readFile(f zip.File) (value string, err error) {
-	v := make([]byte, f.UncompressedSize64)
-
+func readFile(f zip.File) (string, error) {
 	rc, err := f.Open()
 	if err != nil {
 		return "", err
 	}
 	defer rc.Close()
 
-	_, err = io.ReadFull(rc, v)
-	if err != nil {
-		return "", err
-	}
-
-	value = string(v[:])
-
-	return value, err
+	data, err := ioutil.ReadAll(rc)
+	return string(data), err
 }
 
-func storeDesignDoc(bucket couchbase.Bucket, doc string, f zip.File) (err error) {
+func storeDesignDoc(bucket couchbase.Bucket, doc string, f zip.File) error {
 	value, err := readFile(f)
 	if err != nil {
 		return err
 	}
-	err = bucket.PutDDoc(doc, value)
-	return err
+	return bucket.PutDDoc(doc, value)
 }
 
-func storeDocument(bucket couchbase.Bucket, doc string, f zip.File) (err error) {
+func storeDocument(bucket couchbase.Bucket, doc string, f zip.File) error {
 	key := strings.Split(doc, ".")
 	if len(key[0]) == 0 {
 		return errors.New("invaid key name for " + f.Name)
@@ -52,8 +43,7 @@ func storeDocument(bucket couchbase.Bucket, doc string, f zip.File) (err error) 
 		return err
 	}
 
-	err = bucket.Set(key[0], 0, value)
-	return err
+	return bucket.Set(key[0], 0, value)
 }
 
 func main() {
@@ -72,7 +62,6 @@ func main() {
 	r, err := zip.OpenReader(flag.Arg(0))
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 
 	defer r.Close()
@@ -81,7 +70,6 @@ func main() {
 	bucket, err := couchbase.GetBucket(uri, "default", *bucketname)
 	if err != nil {
 		log.Fatalf("Failed to connect to cluster %s: %v", *url, err)
-		os.Exit(1)
 	}
 
 	for _, f := range r.File {
@@ -90,7 +78,6 @@ func main() {
 			err := storeDocument(*bucket, doc[1], *f)
 			if err != nil {
 				log.Fatalf("Failed to store %s: %v", doc[1], err)
-				os.Exit(1)
 			}
 		} else {
 			doc := strings.Split(f.Name, "/design_docs/")
@@ -98,7 +85,6 @@ func main() {
 				err := storeDesignDoc(*bucket, doc[1], *f)
 				if err != nil {
 					log.Fatalf("Failed to store %s: %v", doc[1], err)
-					os.Exit(1)
 				}
 			}
 		}
